@@ -374,7 +374,7 @@ def normalize_date(df):
 
 def render_dashboard():
     if "uploaded_data" not in st.session_state:
-    st.session_state["uploaded_data"] = {}
+        st.session_state["uploaded_data"] = {}
 
     step_df = st.session_state.get("step_count")
     if step_df is not None:
