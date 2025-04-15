@@ -7,8 +7,7 @@ import io
 
 
 st.set_page_config(
-    page_title="Dashboard",
-    #page_icon="💻",
+    page_title="Health Analysis Dashboard",
     initial_sidebar_state="expanded",
 )
 
@@ -332,8 +331,6 @@ def get_sleep_metrics(df):
     df["end"] = df["endDate"]
     df["date"] = df["start"].dt.date
     df["dow"] = df["start"].dt.day_name()
-
-    # Ortalama uyku süresi haftalık
     daily_sleep = df.groupby("date")["sleep_duration_hours"].sum().reset_index()
     daily_sleep["dow"] = pd.to_datetime(daily_sleep["date"]).dt.day_name()
     avg_sleep_by_dow = (
@@ -342,8 +339,6 @@ def get_sleep_metrics(df):
         .reindex(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
         .reset_index(name="avg_sleep")
     )
-
-    # Uyku tipi dağılımı
     sleep_type_dist = df.groupby("sleep_type")["sleep_duration_hours"].mean().reset_index()
 
     return avg_sleep_by_dow, sleep_type_dist
@@ -378,6 +373,9 @@ def normalize_date(df):
 
 
 def render_dashboard():
+    if "uploaded_data" not in st.session_state:
+    st.session_state["uploaded_data"] = {}
+
     step_df = st.session_state.get("step_count")
     if step_df is not None:
         step_df = step_df[step_df["sourceName"] == "Ali Haydar Akca’s iPhone"]
