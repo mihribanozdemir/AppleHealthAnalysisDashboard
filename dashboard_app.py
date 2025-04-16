@@ -32,6 +32,9 @@ with st.sidebar:
             st.session_state.last_uploaded_zip = zip_file
     else:
         st.write("Lütfen zip dosyası yükleyiniz.")
+if "uploaded_data" not in st.session_state or not st.session_state.uploaded_data:
+    st.warning("Lütfen analiz yapmadan önce zip dosyası yükleyin.")
+    st.stop()
 # Grafikler
 height = 176
 custom_colors =  ["#fd7f6f", "#7eb0d5", "#b2e061", "#bd7ebe", "#ffb55a", "#ffee65", "#beb9db", "#fdcce5", "#8bd3c7"]
