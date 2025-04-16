@@ -454,10 +454,9 @@ with tab2:
         else:
             st.warning("Adım verisi bulunamadı.")
             step_count = None
-
+        source_options = step_count["sourceName"].dropna().unique().tolist()
         col1, col2 = st.columns([1, 1])
         with col1:
-            source_options = step_count["sourceName"].dropna().unique().tolist()
             selected_sources = st.multiselect(
                     "Kaynaklar",
                     options=source_options,
