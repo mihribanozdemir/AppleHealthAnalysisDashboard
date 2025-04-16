@@ -740,7 +740,7 @@ with tab4:
             with col2:
                 view_option = st.selectbox(
                     "Görünüm Seçiniz",
-                    ["Haftalık Ortalama Uyuma Saatleri", "Uyku Tipine Göre Saat Dağılımı"],
+                    ["Haftalık Ortalama Uyuma Saatleri", "Uyku Tipine Göre Dağılım"],
                     key = "sleep_view"
                 )
 
