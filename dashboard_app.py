@@ -763,8 +763,8 @@ with tab5:
         active_df = active_df.copy()
         basal_df = basal_df.copy()
 
-        active_df = active_df[active_df["sourceName"] == "Ali Haydar Akca’s iPhone"]
-        basal_df = basal_df[basal_df["sourceName"] == "Ali Haydar Akca’s iPhone"]
+        active_df = active_df[active_df["sourceName"] == "Ali Haydar’s Apple Watch"]
+        basal_df = basal_df[basal_df["sourceName"] == "Ali Haydar’s Apple Watch"]
 
         active_df["startDate"] = pd.to_datetime(active_df["startDate"]).dt.floor("D")
         basal_df["startDate"] = pd.to_datetime(basal_df["startDate"]).dt.floor("D")
