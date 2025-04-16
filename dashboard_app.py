@@ -360,7 +360,7 @@ def plot_sleep_type_pie(df_grouped):
         df_grouped,
         names="sleep_type",
         values="sleep_duration_hours",
-        title="🛏Uyku Evrelerine Göre Dağılım",
+        title="Uyku Evrelerine Göre Dağılım",
         color_discrete_sequence=custom_colors
     )
     st.plotly_chart(fig, use_container_width=True)
@@ -748,7 +748,7 @@ with tab4:
 
             if st.session_state.sleep_view == "Haftalık Ortalama Uyuma Saatleri":
                 plot_avg_sleep_by_dow(avg_by_dow)
-            elif st.session_state.sleep_view == "Uyku Tipine Göre Dağılımı":
+            elif st.session_state.sleep_view == "Uyku Tipine Göre Dağılım":
                 plot_sleep_type_pie(sleep_type_dist)
 
 
