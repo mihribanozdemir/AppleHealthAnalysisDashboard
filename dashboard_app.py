@@ -748,7 +748,7 @@ with tab4:
 
             if st.session_state.sleep_view == "Haftalık Ortalama Uyuma Saatleri":
                 plot_avg_sleep_by_dow(avg_by_dow)
-            elif st.session_state.sleep_view == "Uyku Tipine Göre Saat Dağılımı":
+            elif st.session_state.sleep_view == "Uyku Tipine Göre Dağılımı":
                 plot_sleep_type_pie(sleep_type_dist)
 
 
