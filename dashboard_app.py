@@ -133,7 +133,7 @@ def plot_daily_distance(df_grouped):
 def plot_dow_distance(grouped_df):
     fig = px.bar(
         grouped_df,
-        x="day_name",
+        x="dow",
         y="value",
         color="sourceName",
         barmode="group",
