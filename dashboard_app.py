@@ -810,15 +810,15 @@ with tab5:
         "Aktif Enerji (kcal)": active_df,
         "Bazal Enerji (kcal)": basal_df,
         "Toplam Enerji (kcal)": total_df,
-        "Uyku Analizi (saat)": st.session_state.get("sleep_analysis", sleep_df),
+        "Uyku Süresi (saat)": st.session_state.get("sleep_analysis", sleep_df),
         "Nabız": st.session_state.uploaded_data.get("HeartRate", heart_rate_df),
         "VO2Max": st.session_state.uploaded_data.get("VO2Max"),
         "HRV": st.session_state.uploaded_data.get("HeartRateVariabilitySDNN"),
         "SpO2": st.session_state.uploaded_data.get("OxygenSaturation", spo2_df),
-        "Solunum Hızı": st.session_state.uploaded_data.get("RespiratoryRate"),
-        "Yürüyüş Nabzı": st.session_state.uploaded_data.get("WalkingHeartRateAverage"),
-        "Dinlenik Nabız": st.session_state.uploaded_data.get("RestingHeartRate"),
-        "Egzersiz Toparlanma": st.session_state.uploaded_data.get("HeartRateRecoveryOneMinute")
+        "Solunum Hızı (RespiratoryRate)": st.session_state.uploaded_data.get("RespiratoryRate"),
+        "Yürüyüş Nabzı (WalkingHeartRateAverage)": st.session_state.uploaded_data.get("WalkingHeartRateAverage"),
+        "Dinlenik Nabız (RestingHeartRate)": st.session_state.uploaded_data.get("RestingHeartRate"),
+        "Egzersiz Sonrası Toparlanma (Kalp Atış Toparlanması)": st.session_state.uploaded_data.get("HeartRateRecoveryOneMinute")
     }
 
     selected_vars = st.multiselect(
