@@ -546,7 +546,7 @@ with tab2:
                 plot_daily_distance(grouped)
             elif st.session_state.dw_view_mode == "Haftanın Gününe Göre":
                 grouped = get_grouped_distance(filtered, group_col="dow")
-                plot_dow_distance(grouped, x_col="dow", title="Güne Göre Yürüme Mesafesi")
+                plot_dow_distance(grouped)
 
     with sub_tab3:
         if "WalkingSpeed" in st.session_state.uploaded_data and "WalkingStepLength" in st.session_state.uploaded_data:
