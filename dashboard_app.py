@@ -439,6 +439,13 @@ def preprocess_step_count(df: pd.DataFrame) -> pd.DataFrame:
     df["dow"] = df["startDate"].dt.day_name()
     return df
 
+@st.cache_data
+def normalize_metric_df(df, value_col="value", source=None):
+    df = df.copy()
+    df["date"] = pd.to_datetime(df.get("startDate", df.get("date", pd.NaT)), errors="coerce").dt.tz_localize(None).dt.floor("D")
+    if source:
+        df = df[df["sourceName"] == source]
+    return df[["date", value_col]]
 
 with tab1:
     render_dashboard()
@@ -757,6 +764,7 @@ with tab4:
                 plot_sleep_type_pie(sleep_type_dist)
 
 with tab5:
+
     active_df = st.session_state.uploaded_data.get("ActiveEnergyBurned")
     basal_df = st.session_state.uploaded_data.get("BasalEnergyBurned")
 
@@ -780,21 +788,29 @@ with tab5:
         total_df["date"] = total_df["startDate"]
     else:
         total_df = None
-    step_df = st.session_state.get("StepCount")
+    sum_vars = [
+        "Adım Sayısı", "Yürünen Mesafe",
+        "Aktif Enerji (kcal)", "Bazal Enerji (kcal)", "Toplam Enerji (kcal)",
+    ]
+    step_df = st.session_state.uploaded_data.get("StepCount")
     if step_df is not None:
-        step_df = step_df[step_df["sourceName"] == "Ali Haydar Akca’s iPhone"]
-        st.session_state["step_count_filtered"] = step_df
+        step_df = normalize_metric_df(step_df, source="Ali Haydar Akca’s iPhone")
+        step_df = step_df.groupby("date")["value"].sum().reset_index(name="value")
+        st.session_state["step_count_normalized"] = step_df
     heart_rate_df = st.session_state.uploaded_data.get("HeartRate")
     if heart_rate_df is not None:
-        heart_rate_df = heart_rate_df[heart_rate_df["sourceName"] == "Ali Haydar’s Apple Watch"]
+        heart_rate_df = normalize_metric_df(heart_rate_df, source= "Ali Haydar’s Apple Watch")
+        heart_rate_df = heart_rate_df.groupby("date")["value"].mean().reset_index(name="value")
         st.session_state["heart_rate_filtered"] = heart_rate_df
     dwr_df = st.session_state.uploaded_data.get("DistanceWalkingRunner")
     if dwr_df is not None:
-        dwr_df = dwr_df[dwr_df["sourceName"] == "Ali Haydar Akca’s iPhone"]
+        dwr_df = normalize_metric_df(dwr_df, source= "Ali Haydar Akca’s iPhone")
+        dwr_df = dwr_df.groupby("date")["value"].sum().reset_index(name="value")
         st.session_state["distance_walking_filtered"] = dwr_df
     ws_df = st.session_state.uploaded_data.get("WalkingSpeed")
     if ws_df is not None:
-        ws_df = ws_df[ws_df["sourceName"] == "Ali Haydar Akca’s iPhone"]
+        ws_df = normalize_metric_df(ws_df, source= "Ali Haydar Akca’s iPhone")
+        ws_df = ws_df.groupby("date")["value"].mean().reset_index(name="value")
         st.session_state["walking_speed_filtered"] = ws_df
     sleep_df = st.session_state.uploaded_data.get("SleepAnalysis")
     if sleep_df is not None:
@@ -805,23 +821,25 @@ with tab5:
     spo2_df = st.session_state.uploaded_data.get("OxygenSaturation")
     if spo2_df is not None:
         spo2_df = spo2_df[spo2_df["sourceName"] == "Ali Haydar’s Apple Watch"]
+        spo2_df = spo2_df.groupby("date")["value"].mean().reset_index(name="value")
         st.session_state["spo2_df_filtered"] = spo2_df
     available_metrics = {
-        "Adım Sayısı": st.session_state.get("step_count", step_df),
-        "Yürünen Mesafe": st.session_state.get("distance_walking_runner", dwr_df),
-        "Yürüme Hızı": st.session_state.get("walking_speed", ws_df),
+        "Adım Sayısı": st.session_state.get("step_count_normalized"),
+        "Yürünen Mesafe": st.session_state.get("distance_walking_filtered"),
+        "Yürüme Hızı": st.session_state.get("walking_speed_filtered"),
         "Aktif Enerji (kcal)": active_df,
         "Bazal Enerji (kcal)": basal_df,
         "Toplam Enerji (kcal)": total_df,
-        "Uyku Süresi (saat)": st.session_state.get("sleep_analysis", sleep_daily),
-        "Nabız": st.session_state.uploaded_data.get("HeartRate", heart_rate_df),
+        "Uyku Süresi (saat)": sleep_daily,
+        "Nabız": st.session_state.get("heart_rate_filtered"),
         "VO2Max": st.session_state.uploaded_data.get("VO2Max"),
         "HRV": st.session_state.uploaded_data.get("HeartRateVariabilitySDNN"),
-        "SpO2": st.session_state.uploaded_data.get("OxygenSaturation", spo2_df),
+        "SpO2": st.session_state.get("spo2_df_filtered"),
         "Solunum Hızı": st.session_state.uploaded_data.get("RespiratoryRate"),
         "Yürüyüş Nabzı": st.session_state.uploaded_data.get("WalkingHeartRateAverage"),
         "Dinlenik Nabız": st.session_state.uploaded_data.get("RestingHeartRate"),
-        "Egzersiz Sonrası Toparlanma (Kalp Atış Toparlanması)": st.session_state.uploaded_data.get("HeartRateRecoveryOneMinute")
+        "Egzersiz Sonrası Toparlanma (Kalp Atış Toparlanması)": st.session_state.uploaded_data.get(
+            "HeartRateRecoveryOneMinute")
     }
 
     selected_vars = st.multiselect(
