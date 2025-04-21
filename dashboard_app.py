@@ -325,48 +325,50 @@ def plot_single_metric(df, title, label):
     fig = px.line(daily, x="date", y="value", title=f"{title}", labels={"value": label, "date": "Tarih"})
     st.plotly_chart(fig, use_container_width=True)
 
+
 @st.cache_data
 def get_sleep_metrics(df):
-    df = df.copy()
-    df["startDate"] = pd.to_datetime(df["startDate"])
-    df["endDate"] = pd.to_datetime(df["endDate"])
-    df["start"] = df["startDate"]
-    df["end"] = df["endDate"]
-    df["date"] = df["start"].dt.date
-    df["dow"] = df["start"].dt.day_name()
-    daily_sleep = df.groupby("date")["sleep_duration_hours"].sum().reset_index()
-    daily_sleep["dow"] = pd.to_datetime(daily_sleep["date"]).dt.day_name()
-    avg_sleep_by_dow = (
-        daily_sleep.groupby("dow")["sleep_duration_hours"]
-        .mean()
-        .reindex(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
-        .reset_index(name="avg_sleep")
+    # sadece uyku segmentlerini al
+    asleep_df = df[df["sleep_type"].str.contains("Asleep", case=False)]
+    asleep_df["value"] = asleep_df["sleep_duration_hours"]  # sistemle uyumlu hale getiriyoruz
+    sleep_by_day = asleep_df.groupby(["date", "dow"])["value"].sum().reset_index()
+    avg_by_dow = sleep_by_day.groupby("dow")["value"].mean().reset_index()
+    sleep_type_dist = (
+        asleep_df.groupby("sleep_type")["value"]
+        .sum()
+        .sort_values(ascending=False)
+        .reset_index()
     )
-    sleep_type_dist = df.groupby("sleep_type")["sleep_duration_hours"].mean().reset_index()
 
-    return avg_sleep_by_dow, sleep_type_dist
+    return avg_by_dow, sleep_type_dist
 
-
-def plot_avg_sleep_by_dow(df_grouped):
+def plot_avg_sleep_by_dow(avg_by_dow):
+    avg_by_dow["dow"] = pd.Categorical(
+        avg_by_dow["dow"],
+        categories=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        ordered=True
+    )
+    avg_by_dow = avg_by_dow.sort_values("dow")
     fig = px.bar(
-        df_grouped,
+        avg_by_dow,
         x="dow",
-        y="avg_sleep",
-        title="🗓Haftalık Ortalama Uyku Süresi",
-        color_discrete_sequence=custom_colors,
-        labels={"dow": "Gün", "avg_sleep": "Ortalama Uyku Süresi (saat)"}
+        y="value",  # ← burası düzeltildi
+        title="Haftalık Ortalama Uyuma Süresi",
+        labels={"dow": "Gün", "value": "Ortalama Uyku (saat)"},
     )
+
     st.plotly_chart(fig, use_container_width=True)
 
 def plot_sleep_type_pie(df_grouped):
     fig = px.pie(
         df_grouped,
         names="sleep_type",
-        values="sleep_duration_hours",
+        values="value",
         title="Uyku Evrelerine Göre Dağılım",
         color_discrete_sequence=custom_colors
     )
     st.plotly_chart(fig, use_container_width=True)
+
 
 
 @st.cache_data
@@ -742,7 +744,7 @@ with tab4:
             with col2:
                 view_option = st.selectbox(
                     "Görünüm Seçiniz",
-                    ["Haftalık Ortalama Uyuma Saatleri", "Uyku Tipine Göre Dağılım"],
+                    ["Haftalık Ortalama Uyuma Saatleri", "Uyku Evrelerine Göre Dağılım"],
                     key = "sleep_view"
                 )
 
@@ -751,9 +753,8 @@ with tab4:
 
             if st.session_state.sleep_view == "Haftalık Ortalama Uyuma Saatleri":
                 plot_avg_sleep_by_dow(avg_by_dow)
-            elif st.session_state.sleep_view == "Uyku Tipine Göre Dağılım":
+            elif st.session_state.sleep_view == "Uyku Evrelerine Göre Dağılım":
                 plot_sleep_type_pie(sleep_type_dist)
-
 
 with tab5:
     active_df = st.session_state.uploaded_data.get("ActiveEnergyBurned")
@@ -797,7 +798,9 @@ with tab5:
         st.session_state["walking_speed_filtered"] = ws_df
     sleep_df = st.session_state.uploaded_data.get("SleepAnalysis")
     if sleep_df is not None:
-        sleep_df = sleep_df[sleep_df["sourceName"] == "Ali Haydar Akca’s iPhone"]
+        sleep_df = sleep_df[sleep_df["sourceName"] == "Ali Haydar’s Apple Watch"]
+        sleep_df = sleep_df[sleep_df["sleep_type"].str.contains("Asleep", case=False)]
+        sleep_daily = sleep_df.groupby("date")["sleep_duration_hours"].sum().reset_index(name="value")
         st.session_state["sleep_df_filtered"] = sleep_df
     spo2_df = st.session_state.uploaded_data.get("OxygenSaturation")
     if spo2_df is not None:
@@ -810,14 +813,14 @@ with tab5:
         "Aktif Enerji (kcal)": active_df,
         "Bazal Enerji (kcal)": basal_df,
         "Toplam Enerji (kcal)": total_df,
-        "Uyku Süresi (saat)": st.session_state.get("sleep_analysis", sleep_df),
+        "Uyku Süresi (saat)": st.session_state.get("sleep_analysis", sleep_daily),
         "Nabız": st.session_state.uploaded_data.get("HeartRate", heart_rate_df),
         "VO2Max": st.session_state.uploaded_data.get("VO2Max"),
         "HRV": st.session_state.uploaded_data.get("HeartRateVariabilitySDNN"),
         "SpO2": st.session_state.uploaded_data.get("OxygenSaturation", spo2_df),
-        "Solunum Hızı (RespiratoryRate)": st.session_state.uploaded_data.get("RespiratoryRate"),
-        "Yürüyüş Nabzı (WalkingHeartRateAverage)": st.session_state.uploaded_data.get("WalkingHeartRateAverage"),
-        "Dinlenik Nabız (RestingHeartRate)": st.session_state.uploaded_data.get("RestingHeartRate"),
+        "Solunum Hızı": st.session_state.uploaded_data.get("RespiratoryRate"),
+        "Yürüyüş Nabzı": st.session_state.uploaded_data.get("WalkingHeartRateAverage"),
+        "Dinlenik Nabız": st.session_state.uploaded_data.get("RestingHeartRate"),
         "Egzersiz Sonrası Toparlanma (Kalp Atış Toparlanması)": st.session_state.uploaded_data.get("HeartRateRecoveryOneMinute")
     }
 
@@ -880,4 +883,3 @@ with tab5:
                 st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning("Seçilen değişkenler için ortak tarihli veri bulunamadı.")
-
